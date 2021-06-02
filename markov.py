@@ -16,6 +16,21 @@ def generate_model(text):
 			model[curr_word][next_word] += 1
 	return model
 
+def generate_ngram_model(text, ngram):
+	model = {}
+	for i in range(1, len(text) - 1):
+		prev_word = text[i-1]
+		curr_word = text[i]
+		next_word = text[i+1]
+		if not curr_word in model:
+			model[curr_word] = {}
+		if not next_word in model[curr_word]:
+			model[curr_word][next_word] = 1 
+		else:
+			model[curr_word][next_word] += 1
+	return model
+
+
 def predict_next_token(model, word):
 	choices = []
 	for next_word in model[word].keys():
@@ -62,22 +77,29 @@ def get_parser():
 	)
 
 	parser.add_argument(
-		"-r", "--recur", type=str, help="Recursion Depth"
+		"-r", "--recur", type=int, help="Recursion Depth"
 	)
 
+	parser.add_argument(
+		"-n", "--ngram", type=int, help="Number of Tokens"
+	)
 	
 	return parser
 
 def main(args: argparse.Namespace):
+
 	if args.text is not None:
 		text = load_text(args.text)
-		model = generate_model(text)
+		if args.ngram:
+			model = generate_ngram_model(text, args.ngram)
+		else:
+			model = generate_model(text)
 		write_model(model)
 	elif args.seed is not None:
 		model = load_model()
-		try:
+		if args.recur:
 			text = generate_text(model, args.seed, args.recur)
-		except:
+		else:
 			text = generate_text(model, args.seed)
 		print(text)
 
